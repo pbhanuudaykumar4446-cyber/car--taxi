@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 // Assumed imports based on the code usage
-import { TierBadge } from "../../components/ui/Badge";
-import Toggle from "../../components/ui/Toggle";
-import { Avatar } from "../../components/ui/Avatar"; // Assumed path
-import { Stars } from "../../components/ui/Stars";   // Assumed path
-import { PRODUCTS } from "../../data/mockData";     // Changed from CARS to PRODUCTS
-
+import { TierBadge, Toggle, Avatar, Stars } from "../../components/ui/index.jsx";
 // Mock Data for the datalist (Fixing missing LOCATIONS)
 const LOCATIONS = [
   "Auto Nagar, Kakinada",

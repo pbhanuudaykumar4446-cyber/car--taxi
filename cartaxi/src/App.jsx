@@ -10,11 +10,15 @@ import { AdminAuth, UserAuth } from "./pages/auth/index.jsx";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard.jsx";
-import FleetManagement from "./pages/admin/Fleet.jsx"; // RENAMED BACK TO FLEET
-import { DriversPage, AdminBookings, AnalyticsPage } from "./pages/admin/index.jsx";
+import FleetManagement from "./pages/admin/Fleet.jsx";
+import { DriversPage } from "./pages/admin/Drivers.jsx";
+import { AdminBookings } from "./pages/admin/Bookings.jsx";
+import { AnalyticsPage } from "./pages/admin/Analytics.jsx";
 
 // User Pages
-import { UserDashboard, BookRide, MyBookings } from "./pages/user/index.jsx";
+import { UserDashboard } from "./pages/user/Dashboard.jsx";
+import { PlaceOrder as BookRide } from "./pages/user/BookRide.jsx";
+import { MyBookings } from "./pages/user/MyBookings.jsx";
 
 // Shared
 import Settings from "./pages/Settings.jsx";
