@@ -34,7 +34,8 @@ export function Sidebar() {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
-        <h1>🚖 CarTaxi</h1>
+        <img src="/logo.png" alt="CarTaxi" style={{ width: 44, marginBottom: 8 }} />
+        <h1>CarTaxi</h1>
         <span>
           <span className="logo-dot" />
           {role === "admin" ? "Admin Console" : "Passenger Portal"}

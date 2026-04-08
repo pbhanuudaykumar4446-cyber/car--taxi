@@ -5,7 +5,8 @@ export const AuthLeft = ({ title, subtitle }) => (
   <div className="auth-left">
     <div className="auth-left-grid" />
     <div style={{ position: "relative", zIndex: 1 }}>
-      <div className="auth-brand">🚖<br/>CarTaxi</div>
+      <img src="/logo.png" alt="CarTaxi Logo" style={{ width: 140, marginBottom: 16, filter: "drop-shadow(0 4px 12px rgba(245,158,11,0.3))" }} />
+      <div className="auth-brand" style={{ fontSize: 42 }}>CarTaxi</div>
       <div className="auth-tagline">
         Vijayawada's most trusted taxi management platform. 
         Book rides, manage fleets, and track in real-time.

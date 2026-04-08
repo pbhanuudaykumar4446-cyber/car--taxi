@@ -50,11 +50,14 @@ export default function BillModal({ booking, onClose }) {
       </style></head><body>
       <div class="invoice">
         <div class="header">
-          <div>
-            <div class="logo">🚖 Car<span>Taxi</span></div>
-            <div style="font-size:12px;color:#6B7280;margin-top:4px;">Vijayawada, Andhra Pradesh</div>
-            <div style="font-size:11px;color:#9CA3AF;">GST: 37AAACR1234A1Z5 | CIN: AP2021TC001234</div>
-            <div class="badge">TAX INVOICE</div>
+          <div style="display:flex;align-items:center;gap:16px;">
+            <img src="${window.location.origin}/logo.png" style="width:70px;" />
+            <div>
+              <div class="logo">Car<span>Taxi</span></div>
+              <div style="font-size:12px;color:#6B7280;margin-top:2px;">Vijayawada, Andhra Pradesh</div>
+              <div style="font-size:11px;color:#9CA3AF;">GST: 37AAACR1234A1Z5 | CIN: AP2021TC001234</div>
+              <div class="badge">TAX INVOICE</div>
+            </div>
           </div>
           <div style="text-align:right;">
             <div style="font-size:22px;font-weight:800;color:#F59E0B;">#${booking.id}</div>
@@ -128,9 +131,12 @@ export default function BillModal({ booking, onClose }) {
         <div className="pdf-preview">
           <div className="pdf-header">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div className="pdf-logo">🚖 CarTaxi</div>
-                <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>Vijayawada | GST: 37AAACR1234A1Z5</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <img src="/logo.png" alt="Logo" style={{ width: 42 }} />
+                <div>
+                  <div className="pdf-logo">CarTaxi</div>
+                  <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>Vijayawada | GST: 37AAACR12...</div>
+                </div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontWeight: 800, fontSize: 16, color: "#F59E0B" }}>#{booking.id}</div>
