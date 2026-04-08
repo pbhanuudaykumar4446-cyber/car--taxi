@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd cartaxi && npm install && npm run build",
+  "outputDirectory": "cartaxi/dist",
+  "framework": "vite",
+  "installCommand": "npm install"
+}

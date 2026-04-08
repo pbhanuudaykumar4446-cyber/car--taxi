@@ -1,0 +1,7 @@
+{
+  "name": "car-taxi-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "cd cartaxi && npm install && npm run build"
+  }
+}
