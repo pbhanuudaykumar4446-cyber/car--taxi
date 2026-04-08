@@ -1,7 +1,6 @@
 import React from "react";
-import { BOOKINGS } from "../../data/mockData";
-import { StatusBadge } from "../../components/ui/Badge";
-
+import { StatusBadge } from "../../components/ui/index.jsx";
+import { useApp } from "../../context/AppContext.jsx";
 // ─── MY BOOKINGS ───────────────────────────────────────────────────────────────
 export function MyBookings() {
   const { bookings, setBill } = useApp();

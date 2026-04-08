@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 // Updated imports to use the centralized ui/index.jsx we fixed earlier
 import { TierBadge, Toggle, Avatar, Stars } from "../../components/ui/index.jsx";
-// Assuming you have a mock data file, if not, you might need to create it or remove this import
-import { PRODUCTS } from "../../data/mockData";
-
+// No mock data needed
 export default function PlaceOrder() {
-  // Assuming useApp provides these
-  const { products, addOrder, setBill, showNotification } = useApp(); 
+  // Map taxi structure to the form logic
+  const { cars: products, addBooking: addOrder, setBill, showNotification } = useApp(); 
   
   const [step, setStep] = useState(1);
   const [filter, setFilter] = useState("all");
@@ -30,7 +28,7 @@ export default function PlaceOrder() {
   const tax = Math.round(amount * 0.05);
  
   // Filter Logic
-  const availProducts = (products || PRODUCTS).filter(p => p.status === "available");
+  const availProducts = (products || []).filter(p => p.status === "available");
   const filtered = filter === "all" ? availProducts
     : filter === "electronics" ? availProducts.filter(p => p.category === "electronics")
     : filter === "spare-parts" ? availProducts.filter(p => p.category !== "electronics")

@@ -1,27 +1,60 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import { CARS, BOOKINGS, DRIVERS } from "../data/mockData";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import axios from "axios";
 
 const AppContext = createContext();
+const API_URL = "http://localhost:8000/api";
 
 export function AppProvider({ children }) {
-  // ─── REVERTED TO CAR TAXI LOGIC ───
-  const [screen, setScreen] = useState("admin-app"); // Start at admin dashboard to avoid login errors
-  const [role, setRole] = useState("admin");
+  const [screen, setScreen] = useState("admin-login"); 
+  const [role, setRole] = useState(null);
   
   const [page, setPage] = useState("dashboard");
   const [bill, setBill] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState(null);
 
-  // Reverted Data State
-  const [cars, setCars] = useState(CARS);
-  const [bookings, setBookings] = useState(BOOKINGS);
-  const [drivers, setDrivers] = useState(DRIVERS);
+  // Dynamic Data State
+  const [cars, setCars] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const login = useCallback((r) => {
-    setRole(r);
-    setPage("dashboard");
-    setScreen(r + "-app");
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [carsRes, bookingsRes, driversRes] = await Promise.all([
+        axios.get(`${API_URL}/cars/`),
+        axios.get(`${API_URL}/bookings/`),
+        axios.get(`${API_URL}/drivers/`)
+      ]);
+      setCars(carsRes.data);
+      setBookings(bookingsRes.data);
+      setDrivers(driversRes.data);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+      showNotification("Error connecting to server", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (role) fetchData();
+  }, [role, fetchData]);
+
+  const login = useCallback(async (r, credentials = {}) => {
+    try {
+      // Very basic login for our generic API
+      await axios.post(`${API_URL}/users/login/`, { role: r, ...credentials });
+      setRole(r);
+      setPage("dashboard");
+      setScreen(r + "-app");
+    } catch (e) {
+      setRole(r);
+      setPage("dashboard");
+      setScreen(r + "-app");
+      showNotification("Proceeding in offline/demo mode", "warning");
+    }
   }, []);
 
   const logout = useCallback(() => {
@@ -37,34 +70,58 @@ export function AppProvider({ children }) {
   }, []);
 
   // Car Functions
-  const addCar = useCallback((car) => {
-    setCars(prev => [...prev, { ...car, id: Date.now(), status: "available", driverRating: 5.0, driverTrips: 0 }]);
-  }, []);
+  const addCar = useCallback(async (car) => {
+    try {
+      const res = await axios.post(`${API_URL}/cars/`, car);
+      setCars(prev => [...prev, res.data]);
+      showNotification("Car added successfully!");
+    } catch (e) { showNotification("Failed to add car", "error"); }
+  }, [showNotification]);
 
-  const removeCar = useCallback((id) => {
-    setCars(prev => prev.filter(c => c.id !== id));
-  }, []);
+  const removeCar = useCallback(async (id) => {
+    try {
+      await axios.delete(`${API_URL}/cars/${id}/`);
+      setCars(prev => prev.filter(c => c.id !== id));
+      showNotification("Car removed");
+    } catch (e) { showNotification("Failed to remove car", "error"); }
+  }, [showNotification]);
 
-  const updateCarStatus = useCallback((id, status) => {
-    setCars(prev => prev.map(c => c.id === id ? { ...c, status } : c));
-  }, []);
+  const updateCarStatus = useCallback(async (id, status) => {
+    try {
+      const res = await axios.post(`${API_URL}/cars/${id}/toggle_status/`, { status });
+      setCars(prev => prev.map(c => c.id === id ? { ...c, status: res.data.car_status } : c));
+    } catch (e) { showNotification("Failed to update car status", "error"); }
+  }, [showNotification]);
 
   // Booking Functions
-  const addBooking = useCallback((booking) => {
-    setBookings(prev => [booking, ...prev]);
-  }, []);
+  const addBooking = useCallback(async (booking) => {
+    try {
+      const res = await axios.post(`${API_URL}/bookings/`, booking);
+      setBookings(prev => [res.data, ...prev]);
+      showNotification("Ride booked successfully!");
+    } catch (e) { showNotification("Booking failed", "error"); }
+  }, [showNotification]);
 
-  const updateBookingStatus = useCallback((id, status) => {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
-  }, []);
+  const updateBookingStatus = useCallback(async (id, status) => {
+    try {
+      const res = await axios.post(`${API_URL}/bookings/${id}/update_status/`, { status });
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: res.data.booking_status } : b));
+    } catch (e) { showNotification("Update status failed", "error"); }
+  }, [showNotification]);
 
   // Driver Functions
-  const addDriver = useCallback((driver) => {
-    setDrivers(prev => [...prev, { ...driver, id: Date.now(), rating: 5.0, trips: 0, earnings: 0 }]);
+  const addDriver = useCallback(async (driver) => {
+    try {
+      const res = await axios.post(`${API_URL}/drivers/`, driver);
+      setDrivers(prev => [...prev, res.data]);
+    } catch (e) {}
   }, []);
 
-  const removeDriver = useCallback((id) => {
-    setDrivers(prev => prev.filter(d => d.id !== id));
+  const removeDriver = useCallback(async (id) => {
+    try {
+      await axios.delete(`${API_URL}/drivers/${id}/`);
+      setDrivers(prev => prev.filter(d => d.id !== id));
+    } catch (e) {}
   }, []);
 
   return (
@@ -74,10 +131,10 @@ export function AppProvider({ children }) {
       bill, setBill,
       sidebarOpen, setSidebarOpen,
       notification, showNotification,
-      // Original Exports
       cars, addCar, removeCar, updateCarStatus,
       bookings, addBooking, updateBookingStatus,
       drivers, addDriver, removeDriver,
+      loading, fetchData
     }}>
       {children}
     </AppContext.Provider>

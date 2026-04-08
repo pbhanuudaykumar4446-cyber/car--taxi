@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { StatusBadge, Avatar, Stars, Toggle } from "../../components/ui";
-import { REVENUE_DATA } from "../../data/mockData";
  
 // ─── DRIVERS PAGE ──────────────────────────────────────────────────────────────
 export function DriversPage() {

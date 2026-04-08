@@ -1,14 +1,22 @@
 import React from "react";
 import { useApp } from "../../context/AppContext.jsx";
-import { REVENUE_DATA } from "../../data/mockData";
 
 // ─── ANALYTICS PAGE ────────────────────────────────────────────────────────────
 export function AnalyticsPage() {
   const { bookings, cars, drivers } = useApp(); 
   
-  const totalRevenue = REVENUE_DATA.reduce((s, d) => s + d.revenue, 0);
-  const totalBookings = REVENUE_DATA.reduce((s, d) => s + (d.bookings || 0), 0); 
-  const totalDistance = REVENUE_DATA.reduce((s, d) => s + (d.km || 0), 0); 
+  const totalRevenue = bookings.filter(b=>b.status==='completed').reduce((s, b) => s + (b.total_price || 0), 0);
+  const totalBookings = bookings.length; 
+  const totalDistance = bookings.reduce((s, b) => s + (b.distance_km || 0), 0); 
+
+  const chartDataMap = {};
+  bookings.filter(b=>b.status==='completed').forEach(b => {
+      const month = new Date(b.created_at || Date.now()).toLocaleString('default', { month: 'short' });
+      if (!chartDataMap[month]) chartDataMap[month] = { month, revenue: 0 };
+      chartDataMap[month].revenue += (b.total_price || 0);
+  });
+  const REVENUE_DATA = Object.values(chartDataMap).length ? Object.values(chartDataMap).slice(-6) : [{month: 'Jan', revenue: 0}];
+
  
   const BarChart = ({ data }) => {
     const max = Math.max(...data.map(d => d.revenue));

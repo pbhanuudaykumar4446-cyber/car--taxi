@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { BOOKINGS } from "../../data/mockData";
 import { StatusBadge, Avatar } from "../../components/ui/index.jsx";
 import { useApp } from "../../context/AppContext.jsx";
 

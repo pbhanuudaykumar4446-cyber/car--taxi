@@ -1,17 +1,24 @@
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
-import { REVENUE_DATA } from "../../data/mockData";
 import { StatusBadge, Avatar } from "../../components/ui";
 
 export default function AdminDashboard() {
-  const { bookings, cars, drivers } = useApp(); // REVERTED
+  const { bookings, cars, drivers } = useApp(); 
 
-  const totalRevenue = bookings?.reduce((acc, b) => acc + (b.amount || 0), 0) || 0;
+  const totalRevenue = bookings?.reduce((acc, b) => acc + (b.total_price || 0), 0) || 0;
   const totalBookings = bookings?.length || 0;
   const pendingBookings = bookings?.filter(b => b.status === "pending").length || 0;
   const activeRides = bookings?.filter(b => b.status === "active").length || 0;
   const completedBookings = bookings?.filter(b => b.status === "completed").length || 0;
-  const totalKm = bookings?.reduce((acc, b) => acc + (b.km || 0), 0) || 0;
+  const totalKm = bookings?.reduce((acc, b) => acc + (b.distance_km || 0), 0) || 0;
+
+  const chartDataMap = {};
+  (bookings || []).filter(b=>b.status==='completed').forEach(b => {
+      const month = new Date(b.created_at || Date.now()).toLocaleString('default', { month: 'short' });
+      if (!chartDataMap[month]) chartDataMap[month] = { month, revenue: 0 };
+      chartDataMap[month].revenue += (b.total_price || 0);
+  });
+  const REVENUE_DATA = Object.values(chartDataMap).length ? Object.values(chartDataMap).slice(-6) : [{month: 'Jan', revenue: 0}];
 
   return (
     <div className="page animate-in">

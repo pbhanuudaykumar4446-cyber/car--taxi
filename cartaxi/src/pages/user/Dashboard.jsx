@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { StatusBadge, TierBadge, Toggle, Avatar, Stars } from "../../components/ui";
-import { LOCATIONS } from "../../data/mockData";
  
 // ─── USER DASHBOARD ────────────────────────────────────────────────────────────
 export function UserDashboard() {
