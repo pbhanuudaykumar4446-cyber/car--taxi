@@ -23,7 +23,7 @@ export function DriversPage() {
         <div>
           <div style={{ fontFamily: "var(--font-head)", fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px" }} className="animate-in">Drivers</div>
           <div style={{ color: "var(--text2)", fontSize: 14, marginTop: 6 }} className="animate-in delay-1">
-            {drivers.length} registered · {drivers.filter(d => d.status === "available").length} available
+            {(drivers || []).length} registered · {(drivers || []).filter(d => d.status === "available").length} available
           </div>
         </div>
         <button className="btn-primary animate-in delay-2" onClick={() => setShowModal(true)}>+ Add Driver</button>
@@ -31,10 +31,10 @@ export function DriversPage() {
  
       <div style={{ display: "flex", gap: 12, marginBottom: 24 }} className="animate-in delay-1">
         {[
-          { l: "Total Drivers", v: drivers.length, c: "var(--accent)" },
-          { l: "Available", v: drivers.filter(d => d.status === "available").length, c: "var(--accent2)" },
-          { l: "On Trip", v: drivers.filter(d => d.status === "on_trip").length, c: "#60A5FA" },
-          { l: "Total Trips", v: drivers.reduce((s, d) => s + (d.trips || 0), 0).toLocaleString(), c: "#A78BFA" },
+           { l: "Total Drivers", v: (drivers || []).length, c: "var(--accent)" },
+          { l: "Available", v: (drivers || []).filter(d => d.status === "available").length, c: "var(--accent2)" },
+          { l: "On Trip", v: (drivers || []).filter(d => d.status === "on_trip").length, c: "#60A5FA" },
+          { l: "Total Trips", v: (drivers || []).reduce((s, d) => s + (d.trips || 0), 0).toLocaleString(), c: "#A78BFA" },
         ].map(s => (
           <div key={s.l} style={{ flex: 1, background: "var(--primary-card)", border: "1px solid var(--border)", borderRadius: 10, padding: "14px 18px", textAlign: "center" }}>
             <div style={{ fontFamily: "var(--font-head)", fontSize: 22, fontWeight: 700, color: s.c }}>{s.v}</div>
@@ -48,15 +48,15 @@ export function DriversPage() {
           <table>
             <thead><tr><th>Driver</th><th>License</th><th>Assigned Car</th><th>Rating</th><th>Trips</th><th>Earnings</th><th>Status</th><th>Action</th></tr></thead>
             <tbody>
-              {drivers.map(d => (
+              {(drivers || []).map(d => (
                 <tr key={d.id}>
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <Avatar name={d.name} size={38} />
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: 14 }}>{d.name}</div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{d.name || d.user_name}</div>
                         <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>📞 {d.phone}</div>
-                        {d.email && <div style={{ fontSize: 11, color: "var(--text2)" }}>✉ {d.email}</div>}
+                        {(d.email || d.user_email) && <div style={{ fontSize: 11, color: "var(--text2)" }}>✉ {d.email || d.user_email}</div>}
                       </div>
                     </div>
                   </td>

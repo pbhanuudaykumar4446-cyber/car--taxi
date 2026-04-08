@@ -3,23 +3,27 @@ import { useApp } from "../../context/AppContext.jsx";
 
 // ─── ANALYTICS PAGE ────────────────────────────────────────────────────────────
 export function AnalyticsPage() {
-  const { bookings, cars, drivers } = useApp(); 
+  const { bookings = [], cars = [], drivers = [] } = useApp(); 
   
-  const totalRevenue = bookings.filter(b=>b.status==='completed').reduce((s, b) => s + (b.total_price || 0), 0);
-  const totalBookings = bookings.length; 
-  const totalDistance = bookings.reduce((s, b) => s + (b.distance_km || 0), 0); 
+  const completedBookings = (bookings || []).filter(b => b.status === 'completed');
+  const totalRevenue = completedBookings.reduce((s, b) => s + (b.total_price || 0), 0);
+  const totalBookings = (bookings || []).length; 
+  const totalDistance = (bookings || []).reduce((s, b) => s + (b.distance_km || 0), 0); 
 
   const chartDataMap = {};
-  bookings.filter(b=>b.status==='completed').forEach(b => {
-      const month = new Date(b.created_at || Date.now()).toLocaleString('default', { month: 'short' });
+  completedBookings.forEach(b => {
+      const dateStr = b.created_at || new Date().toISOString();
+      const month = new Date(dateStr).toLocaleString('default', { month: 'short' });
       if (!chartDataMap[month]) chartDataMap[month] = { month, revenue: 0 };
       chartDataMap[month].revenue += (b.total_price || 0);
   });
-  const REVENUE_DATA = Object.values(chartDataMap).length ? Object.values(chartDataMap).slice(-6) : [{month: 'Jan', revenue: 0}];
+  
+  const rawChartData = Object.values(chartDataMap);
+  const REVENUE_DATA = rawChartData.length ? rawChartData.slice(-6) : [{month: 'Jan', revenue: 0}];
 
- 
   const BarChart = ({ data }) => {
-    const max = Math.max(...data.map(d => d.revenue));
+    const values = data.map(d => d.revenue);
+    const max = Math.max(...values, 1000); // Avoid division by zero
     return (
       <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 140, padding: "0 8px" }}>
         {data.map((d, i) => (
@@ -62,8 +66,8 @@ export function AnalyticsPage() {
         <div className="card animate-in delay-3" style={{ padding: 24 }}>
           <div className="section-title">Booking Status Distribution</div>
           {["completed", "active", "pending", "cancelled"].map(s => {
-            const count = bookings.filter(b => b.status === s).length;
-            const pct = bookings.length ? Math.round((count / bookings.length) * 100) : 0;
+            const count = (bookings || []).filter(b => b.status === s).length;
+            const pct = (bookings || []).length ? Math.round((count / (bookings || []).length) * 100) : 0;
             const colors = { completed: "var(--accent2)", active: "#60A5FA", pending: "var(--accent)", cancelled: "var(--danger)" };
             return (
               <div key={s} style={{ marginBottom: 14 }}>
@@ -86,19 +90,19 @@ export function AnalyticsPage() {
           <table>
             <thead><tr><th>Car</th><th>Tier</th><th>Driver</th><th>Price/Km</th><th>Popularity</th></tr></thead> 
             <tbody>
-              {cars.slice(0, 5).map((p, i) => ( 
+              {(cars || []).slice(0, 5).map((p, i) => ( 
                 <tr key={p.id}>
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ width: 44, height: 36, borderRadius: 6, overflow: "hidden", background: "var(--surface2)", flexShrink: 0 }}>
-                        {p.image ? <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 18 }}>{p.emoji}</div>}
+                        {p.image ? <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 18 }}>🚗</div>}
                       </div>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</div>
                     </div>
                   </td>
                   <td>{p.tier}</td>
-                  <td>{p.driver}</td> 
-                  <td style={{ fontWeight: 700, color: "var(--accent)" }}>₹{p.pricePerKm}</td> 
+                  <td>{p.driver_name || "Owner"}</td> 
+                  <td style={{ fontWeight: 700, color: "var(--accent)" }}>₹{p.price_per_km || p.pricePerKm}</td> 
                   <td>
                     <div style={{ height: 6, width: 80, borderRadius: 4, background: "var(--surface3)", overflow: "hidden" }}>
                       <div style={{ width: `${90 - i * 12}%`, height: "100%", background: "var(--accent)", borderRadius: 4 }} />

@@ -4,9 +4,9 @@ import { StatusBadge, TierBadge, Toggle, Avatar, Stars } from "../../components/
  
 // ─── USER DASHBOARD ────────────────────────────────────────────────────────────
 export function UserDashboard() {
-  const { bookings, cars, setPage } = useApp();
-  const myBookings = bookings.slice(0, 3);
-  const availCars = cars.filter(c => c.status === "available").slice(0, 3);
+  const { bookings, cars, setPage, currentUser } = useApp();
+  const myBookings = (bookings || []).slice(0, 3);
+  const availCars = (cars || []).filter(c => c.status === "available").slice(0, 3);
  
   return (
     <div className="page">
@@ -24,7 +24,7 @@ export function UserDashboard() {
             <span style={{ fontSize: 12, color: "var(--accent2)", fontWeight: 600 }}>GPS ACTIVE · Vijayawada</span>
           </div>
           <div style={{ fontFamily: "var(--font-head)", fontSize: 30, fontWeight: 700, marginBottom: 6, letterSpacing: "-0.5px" }}>
-            Hello, Priya 👋
+            Hello, {currentUser?.username || "Priya"} 👋
           </div>
           <div style={{ color: "var(--text2)", fontSize: 15, marginBottom: 24 }}>
             Where are you headed today? {availCars.length} cars available near you.

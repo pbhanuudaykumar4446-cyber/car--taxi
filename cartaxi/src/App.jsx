@@ -23,34 +23,64 @@ import { MyBookings } from "./pages/user/MyBookings.jsx";
 // Shared
 import Settings from "./pages/Settings.jsx";
 
+// ── Error Boundary ─────────────────────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(e) { console.error("App crash caught:", e); }
+  render() {
+    if (this.state.hasError) return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0A0E1A", color: "#fff", gap: 16, padding: 40 }}>
+        <div style={{ fontSize: 48 }}>⚠️</div>
+        <div style={{ fontFamily: "Georgia", fontSize: 22, fontWeight: 700 }}>Something went wrong</div>
+        <div style={{ color: "#888", fontSize: 14, maxWidth: 400, textAlign: "center" }}>{String(this.state.error)}</div>
+        <button onClick={() => { localStorage.clear(); window.location.reload(); }}
+          style={{ marginTop: 20, padding: "12px 28px", background: "#F5A623", color: "#000", border: "none", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+          Clear Session & Reload
+        </button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
+// ── App Content ────────────────────────────────────────────────────────────────
 function AppContent() {
   const { screen, role, page, bill, setBill, notification } = useApp();
 
   if (screen === "admin-login" || screen === "admin-signup") return <AdminAuth />;
-  if (screen === "user-login" || screen === "user-signup") return <UserAuth />;
+  if (screen === "user-login"  || screen === "user-signup")  return <UserAuth />;
+
+  // Safety: if screen says logged-in but role is missing, go back to login
+  if (!role) { localStorage.clear(); return <AdminAuth />; }
 
   const renderPage = () => {
-    if (role === "admin") {
-      switch (page) {
-        case "dashboard":  return <AdminDashboard />;
-        case "cars":       return <FleetManagement />; // Reverted
-        case "drivers":    return <DriversPage />;    // Reverted
-        case "bookings":   return <AdminBookings />;   // Reverted
-        case "analytics":  return <AnalyticsPage />;
-        case "settings":   return <Settings />;
-        default:           return <AdminDashboard />;
+    try {
+      if (role === "admin") {
+        switch (page) {
+          case "dashboard":  return <AdminDashboard />;
+          case "cars":       return <FleetManagement />;
+          case "drivers":    return <DriversPage />;
+          case "bookings":   return <AdminBookings />;
+          case "analytics":  return <AnalyticsPage />;
+          case "settings":   return <Settings />;
+          default:           return <AdminDashboard />;
+        }
       }
-    }
-    if (role === "user") {
-      switch (page) {
-        case "dashboard":   return <UserDashboard />;
-        case "book":        return <BookRide />;        // Reverted
-        case "mybookings":  return <MyBookings />;     // Reverted
-        case "settings":    return <Settings />;
-        default:            return <UserDashboard />;
+      if (role === "user") {
+        switch (page) {
+          case "dashboard":   return <UserDashboard />;
+          case "book":        return <BookRide />;
+          case "mybookings":  return <MyBookings />;
+          case "settings":    return <Settings />;
+          default:            return <UserDashboard />;
+        }
       }
+      return <AdminAuth />;
+    } catch(e) {
+      console.error("Page render error:", e);
+      return <AdminDashboard />;
     }
-    return null;
   };
 
   return (
@@ -58,7 +88,9 @@ function AppContent() {
       <Sidebar />
       <div className="main">
         <Topbar />
-        {renderPage()}
+        <ErrorBoundary key={page}>
+          {renderPage()}
+        </ErrorBoundary>
       </div>
       {bill && <BillModal booking={bill} onClose={() => setBill(null)} />}
       {notification && <Notification message={notification.msg} type={notification.type} />}
@@ -70,7 +102,9 @@ export default function App() {
   return (
     <AppProvider>
       <GlobalStyle />
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </AppProvider>
   );
 }
