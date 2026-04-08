@@ -3,7 +3,7 @@ import { useApp } from "../../context/AppContext";
 import { Avatar, LiveDot } from "../ui";
 
 export function Sidebar() {
-  const { role, page, setPage, logout, bookings } = useApp();
+  const { role, page, setPage, logout, bookings, currentUser } = useApp();
 
   const ADMIN_NAV = [
     { section: "Overview" },
@@ -64,13 +64,13 @@ export function Sidebar() {
 
       <div className="sidebar-footer">
         <div className="sidebar-user">
-          <Avatar name={role === "admin" ? "Admin User" : "Priya Nair"} size={34} />
+          <Avatar name={currentUser?.username || (role === "admin" ? "Admin" : "User")} size={34} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {role === "admin" ? "Admin User" : "Priya Nair"}
+              {currentUser?.username || (role === "admin" ? "Administrator" : "User Account")}
             </div>
             <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 1 }}>
-              {role === "admin" ? "Administrator" : "+91 9876543210"}
+              {currentUser?.phone || (role === "admin" ? "System Access" : "CarTaxi Member")}
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@ export function Sidebar() {
 }
 
 export function Topbar() {
-  const { role, page, setPage, bookings } = useApp();
+  const { role, page, setPage, bookings, currentUser } = useApp();
 
   const TITLES = {
     admin: { 
@@ -133,11 +133,14 @@ export function Topbar() {
           <div className="notif-dot" />
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--glass)", border: "1px solid var(--glass-border)", borderRadius: "var(--radius-sm)", padding: "6px 12px", cursor: "pointer" }}>
-          <Avatar name={role === "admin" ? "Admin User" : "Priya Nair"} size={28} />
-          <span className={`tag ${role === "admin" ? "tag-gold" : "tag-teal"}`} style={{ fontSize: 10 }}>
-            {role === "admin" ? "Admin" : "User"}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--glass)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "6px 12px", cursor: "pointer" }}>
+          <Avatar name={currentUser?.username || (role === "admin" ? "Admin" : "User")} size={28} />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{currentUser?.username || "Account"}</span>
+            <span className={`tag ${role === "admin" ? "tag-gold" : "tag-teal"}`} style={{ fontSize: 8, padding: "1px 6px" }}>
+                {role === "admin" ? "Admin" : "Passenger"}
+            </span>
+          </div>
         </div>
       </div>
     </div>

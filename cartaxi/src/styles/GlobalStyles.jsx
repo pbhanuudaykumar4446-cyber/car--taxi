@@ -12,32 +12,44 @@ export const GlobalStyle = () => (
       --primary-card: #161D2E;
       --accent: #F59E0B;
       --accent-dark: #D97706;
-      --accent-glow: rgba(245,158,11,0.15);
+      --accent-glow: rgba(245,158,11,0.2);
       --accent2: #10B981;
       --accent2-glow: rgba(16,185,129,0.12);
       --blue: #3B82F6;
-      --blue-glow: rgba(59,130,246,0.12);
-      --danger: #EF4444;
-      --danger-glow: rgba(239,68,68,0.12);
-      --purple: #8B5CF6;
-      --surface: #1A2236;
-      --surface2: #1E2A42;
-      --surface3: #243150;
-      --glass: rgba(255,255,255,0.04);
-      --glass-border: rgba(255,255,255,0.08);
       --text: #F1F5F9;
       --text2: #94A3B8;
       --text3: #4B5563;
-      --border: rgba(255,255,255,0.07);
-      --border-accent: rgba(245,158,11,0.3);
-      --radius: 16px;
-      --radius-sm: 10px;
-      --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
-      --shadow-glow: 0 0 40px rgba(245,158,11,0.08);
+      --border: rgba(255,255,255,0.1);
+      --glass: rgba(255,255,255,0.03);
+      --glass-heavy: rgba(255,255,255,0.06);
+      --radius: 18px;
+      --radius-sm: 12px;
       --font-head: 'Clash Display', sans-serif;
       --font-body: 'Plus Jakarta Sans', sans-serif;
       --sidebar-w: 260px;
     }
+
+    /* Premium Animations */
+    @keyframes premiumFadeIn {
+      0% { opacity: 0; transform: translateY(14px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes slideRight {
+      0% { opacity: 0; transform: translateX(-30px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(245,158,11,0.1); }
+      50% { box-shadow: 0 0 40px rgba(245,158,11,0.2); }
+    }
+
+    .animate-premium { animation: premiumFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .animate-slide { animation: slideRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
 
     html { scroll-behavior: smooth; }
 
