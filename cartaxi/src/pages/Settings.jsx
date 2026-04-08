@@ -7,7 +7,7 @@ export default function Settings() {
   const [notif, setNotif] = useState({ sms: true, email: true, push: false, whatsapp: true });
   const [profile, setProfile] = useState(role === "admin"
     ? { name: "Admin User", phone: "9876543210", email: "admin@cartaxi.in", company: "CarTaxi Vijayawada", gst: "37AAACR1234A1Z5" }
-    : { name: "Priya Nair", phone: "9876543210", email: "priya@email.com", address: "MG Road, Vijayawada - 520010" }
+    : { name: "user", phone: "9876543210", email: "user@email.com", address: "MG Road, Vijayawada - 520010" }
   );
   const [billing, setBilling] = useState({ baseFare: 50, nightSurcharge: 20, waitingCharge: 2, cancellationFee: 50 });
   const [saving, setSaving] = useState(false);
@@ -104,7 +104,7 @@ export default function Settings() {
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{s.l}</div>
                   <div style={{ fontSize: 12, color: "var(--text2)" }}>{s.d}</div>
                 </div>
-                <Toggle on={i === 0} onChange={() => {}} />
+                <Toggle on={i === 0} onChange={() => { }} />
               </div>
             ))}
           </div>
