@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-// Assumed imports based on the code usage
 import { TierBadge, Toggle, Avatar, Stars } from "../../components/ui/index.jsx";
+import { useApp } from "../../context/AppContext.jsx";
 // Mock Data for the datalist (Fixing missing LOCATIONS)
 const LOCATIONS = [
   "Auto Nagar, Kakinada",

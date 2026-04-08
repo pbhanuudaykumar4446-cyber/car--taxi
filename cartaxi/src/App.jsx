@@ -17,7 +17,7 @@ import { AnalyticsPage } from "./pages/admin/Analytics.jsx";
 
 // User Pages
 import { UserDashboard } from "./pages/user/Dashboard.jsx";
-import { PlaceOrder as BookRide } from "./pages/user/BookRide.jsx";
+import BookRide from "./pages/user/PlaceOrder.jsx";
 import { MyBookings } from "./pages/user/MyBookings.jsx";
 
 // Shared
