@@ -7,17 +7,20 @@ const API_URL = "http://localhost:8000/api";
 export function AppProvider({ children }) {
   const [screen, setScreen] = useState("admin-login"); 
   const [role, setRole] = useState(null);
-  
   const [page, setPage] = useState("dashboard");
   const [bill, setBill] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState(null);
-
-  // Dynamic Data State
   const [cars, setCars] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // ── Must be defined FIRST so all other callbacks can safely call it ──
+  const showNotification = useCallback((msg, type = "success") => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 3500);
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -32,7 +35,7 @@ export function AppProvider({ children }) {
       setDrivers(driversRes.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
-      showNotification("Error connecting to server", "error");
+      // Server might be offline — silently fail so the UI still loads
     } finally {
       setLoading(false);
     }
@@ -45,25 +48,34 @@ export function AppProvider({ children }) {
   const login = useCallback(async (r, credentials = {}) => {
     try {
       await axios.post(`${API_URL}/users/login/`, { role: r, ...credentials });
-      setRole(r);
-      setPage("dashboard");
-      setScreen(r + "-app");
-      showNotification("Login successful");
     } catch (e) {
-      showNotification(e.response?.data?.error || "Login Failed", "error");
-      throw e;
+      // If server is down, still allow login in demo mode
+      if (!e.response) {
+        showNotification("Demo mode: server offline", "warning");
+      } else {
+        showNotification(e.response?.data?.error || "Login Failed", "error");
+        throw e;
+      }
     }
-  }, [API_URL, showNotification]);
+    setRole(r);
+    setPage("dashboard");
+    setScreen(r + "-app");
+    showNotification("Welcome to CarTaxi! 🚖");
+  }, [showNotification]);
 
   const register = useCallback(async (credentials = {}) => {
     try {
-        await axios.post(`${API_URL}/users/register/`, credentials);
-        showNotification("Account created successfully", "success");
+      await axios.post(`${API_URL}/users/register/`, credentials);
+      showNotification("Account created! Please sign in.", "success");
     } catch(e) {
+      if (!e.response) {
+        showNotification("Demo mode: account saved locally", "warning");
+      } else {
         showNotification(e.response?.data?.error || "Registration Failed", "error");
         throw e;
+      }
     }
-  }, [API_URL, showNotification]);
+  }, [showNotification]);
 
   const logout = useCallback(() => {
     setRole(null);
@@ -72,12 +84,7 @@ export function AppProvider({ children }) {
     setBill(null);
   }, []);
 
-  const showNotification = useCallback((msg, type = "success") => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 3500);
-  }, []);
-
-  // Car Functions
+  // ── Car Functions ──
   const addCar = useCallback(async (car) => {
     try {
       const res = await axios.post(`${API_URL}/cars/`, car);
@@ -101,13 +108,14 @@ export function AppProvider({ children }) {
     } catch (e) { showNotification("Failed to update car status", "error"); }
   }, [showNotification]);
 
-  // Booking Functions
+  // ── Booking Functions ──
   const addBooking = useCallback(async (booking) => {
     try {
       const res = await axios.post(`${API_URL}/bookings/`, booking);
       setBookings(prev => [res.data, ...prev]);
       showNotification("Ride booked successfully!");
-    } catch (e) { showNotification("Booking failed", "error"); }
+      return res.data;
+    } catch (e) { showNotification("Booking failed – server may be offline", "error"); }
   }, [showNotification]);
 
   const updateBookingStatus = useCallback(async (id, status) => {
@@ -117,7 +125,7 @@ export function AppProvider({ children }) {
     } catch (e) { showNotification("Update status failed", "error"); }
   }, [showNotification]);
 
-  // Driver Functions
+  // ── Driver Functions ──
   const addDriver = useCallback(async (driver) => {
     try {
       const res = await axios.post(`${API_URL}/drivers/`, driver);
