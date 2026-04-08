@@ -2,122 +2,180 @@ import React, { useState } from "react";
 import { StatusBadge, Avatar } from "../../components/ui/index.jsx";
 import { useApp } from "../../context/AppContext.jsx";
 
-// ─── ADMIN BOOKINGS ────────────────────────────────────────────────────────────
 export function AdminBookings() {
-  const { bookings, updateBookingStatus, setBill, showNotification } = useApp();
+  const { bookings, updateBookingStatus, setBill, showNotification, fetchData } = useApp();
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
- 
+
   const filtered = bookings.filter(b => {
     const matchFilter = filter === "all" || b.status === filter;
-    const matchSearch = !search || b.user.toLowerCase().includes(search.toLowerCase()) || b.car.toLowerCase().includes(search.toLowerCase()) || b.id.toLowerCase().includes(search.toLowerCase());
+    const s = search.toLowerCase();
+    const matchSearch = !s
+      || (b.user_name || "").toLowerCase().includes(s)
+      || (b.car_details?.name || b.car || "").toLowerCase().includes(s)
+      || String(b.id).includes(s);
     return matchFilter && matchSearch;
   });
- 
-  const handleApprove = (b) => {
-    updateBookingStatus(b.id, "active");
-    showNotification(`Booking ${b.id} approved!`, "success");
+
+  const handleApprove = async (b) => {
+    await updateBookingStatus(b.id, "active");
+    showNotification(`Booking #${b.id} approved! Driver dispatched.`, "success");
+    fetchData();
   };
- 
-  const handleComplete = (b) => {
-    updateBookingStatus(b.id, "completed");
-    showNotification(`Booking ${b.id} marked as completed`, "success");
+
+  const handleComplete = async (b) => {
+    await updateBookingStatus(b.id, "completed");
+    showNotification(`Booking #${b.id} marked completed`, "success");
+    fetchData();
   };
- 
-  const handleCancel = (b) => {
-    if (window.confirm(`Cancel booking ${b.id}?`)) {
-      updateBookingStatus(b.id, "cancelled");
-      showNotification(`Booking ${b.id} cancelled`, "info");
-    }
+
+  const handleCancel = async (b) => {
+    await updateBookingStatus(b.id, "cancelled");
+    showNotification(`Booking #${b.id} cancelled`, "info");
+    fetchData();
   };
- 
+
+  const pendingCount   = bookings.filter(b => b.status === "pending").length;
+  const activeCount    = bookings.filter(b => b.status === "active").length;
+  const completedCount = bookings.filter(b => b.status === "completed").length;
+
   return (
     <div className="page">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
         <div>
-          <div style={{ fontFamily: "var(--font-head)", fontSize: 26, fontWeight: 700 }} className="animate-in">All Bookings</div>
-          <div style={{ color: "var(--text2)", fontSize: 14, marginTop: 6 }} className="animate-in delay-1">{bookings.length} total · {bookings.filter(b => b.status === "pending").length} pending approval</div>
+          <div style={{ fontFamily: "var(--font-head)", fontSize: 26, fontWeight: 700 }} className="animate-in">
+            Booking Management
+          </div>
+          <div style={{ color: "var(--text2)", fontSize: 14, marginTop: 6 }} className="animate-in delay-1">
+            {bookings.length} total &nbsp;·&nbsp;
+            <span style={{ color: "var(--accent)", fontWeight: 700 }}>{pendingCount} pending approval</span>
+          </div>
         </div>
+        <button className="btn-secondary animate-in" onClick={fetchData} style={{ fontSize: 13 }}>
+          ↻ Refresh
+        </button>
       </div>
- 
-      {/* Summary Row */}
+
+      {/* Live pending alert */}
+      {pendingCount > 0 && (
+        <div className="animate-in" style={{ marginBottom: 20, padding: "14px 20px", background: "rgba(245,166,35,0.1)", border: "1px solid var(--accent)", borderRadius: 10, display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 20 }}>🔔</div>
+          <div>
+            <div style={{ fontWeight: 700, color: "var(--accent)" }}>{pendingCount} new booking request{pendingCount > 1 ? "s" : ""} waiting!</div>
+            <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 2 }}>Review and approve to dispatch a driver.</div>
+          </div>
+        </div>
+      )}
+
+      {/* Summary */}
       <div style={{ display: "flex", gap: 12, marginBottom: 24 }} className="animate-in delay-1">
-        {["all", "pending", "active", "completed", "cancelled"].map(s => {
-          const count = s === "all" ? bookings.length : bookings.filter(b => b.status === s).length;
-          return (
-            <button key={s} onClick={() => setFilter(s)} style={{ flex: 1, padding: "12px 8px", borderRadius: 10, border: filter === s ? "1px solid var(--accent)" : "1px solid var(--border)", background: filter === s ? "var(--accent-glow)" : "var(--primary-card)", cursor: "pointer", textAlign: "center" }}>
-              <div style={{ fontFamily: "var(--font-head)", fontSize: 20, fontWeight: 700, color: filter === s ? "var(--accent)" : "var(--text)" }}>{count}</div>
-              <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 2, textTransform: "capitalize" }}>{s}</div>
-            </button>
-          );
-        })}
+        {[
+          { k: "all",       l: "All",       v: bookings.length,    c: "var(--text)" },
+          { k: "pending",   l: "Pending",   v: pendingCount,       c: "var(--accent)" },
+          { k: "active",    l: "Active",    v: activeCount,        c: "#60A5FA" },
+          { k: "completed", l: "Completed", v: completedCount,     c: "var(--accent2)" },
+          { k: "cancelled", l: "Cancelled", v: bookings.filter(b => b.status === "cancelled").length, c: "var(--danger)" },
+        ].map(s => (
+          <button key={s.k} onClick={() => setFilter(s.k)} style={{ flex: 1, padding: "12px 8px", borderRadius: 10, border: filter === s.k ? "1px solid var(--accent)" : "1px solid var(--border)", background: filter === s.k ? "var(--accent-glow)" : "var(--primary-card)", cursor: "pointer", textAlign: "center" }}>
+            <div style={{ fontFamily: "var(--font-head)", fontSize: 22, fontWeight: 700, color: filter === s.k ? "var(--accent)" : s.c }}>{s.v}</div>
+            <div style={{ fontSize: 11, color: "var(--text2)", marginTop: 2 }}>{s.l}</div>
+          </button>
+        ))}
       </div>
- 
+
       {/* Search */}
       <div style={{ marginBottom: 20 }} className="animate-in delay-2">
-        <input placeholder="🔍 Search by customer name, car, or booking ID..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input placeholder="🔍 Search by customer, car or booking ID..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
- 
+
       <div className="card animate-in delay-2">
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Booking ID</th><th>Customer</th><th>Car / Driver</th><th>Route</th><th>Distance</th><th>Amount</th><th>Status</th><th>Actions</th>
+                <th>#ID</th>
+                <th>Customer</th>
+                <th>Car / Driver</th>
+                <th>Route</th>
+                <th>Distance</th>
+                <th>Fare</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map(b => (
-                <tr key={b.id}>
-                  <td style={{ fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-head)", fontSize: 15 }}>{b.id}</td>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <Avatar name={b.user} size={32} />
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{b.user}</div>
-                        <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>📞 {b.userPhone || "N/A"}</div>
+              {filtered.map(b => {
+                const carName    = b.car_details?.name  || `Car #${b.car}`;
+                const carImg     = b.car_details?.image || null;
+                const driverName = b.car_details?.driver_name || "Unassigned";
+                const userName   = b.user_name || `User #${b.user}`;
+
+                return (
+                  <tr key={b.id} style={{ background: b.status === "pending" ? "rgba(245,166,35,0.03)" : undefined }}>
+                    <td style={{ fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-head)", fontSize: 15 }}>
+                      #{b.id}
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Avatar name={userName} size={32} />
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{userName}</div>
+                          <div style={{ fontSize: 11, color: "var(--text2)" }}>
+                            {b.created_at ? new Date(b.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{b.car}</div>
-                    <div style={{ fontSize: 11, color: "var(--text2)" }}>👤 {b.driver}</div>
-                    <div style={{ fontSize: 11, color: "var(--accent)" }}>📞 {b.driverPhone || "N/A"}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>📍 {b.from}</div>
-                    <div style={{ fontSize: 12, color: "var(--text2)" }}>🏁 {b.to}</div>
-                    {b.fromKm && <div style={{ fontSize: 11, color: "var(--text3)" }}>ODO: {b.fromKm}→{b.toKm}</div>}
-                  </td>
-                  <td style={{ fontWeight: 600, fontSize: 13 }}>{b.km} km</td>
-                  <td>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: "var(--accent)" }}>₹{b.amount.toLocaleString("en-IN")}</div>
-                    <div style={{ fontSize: 11, color: "var(--text2)" }}>+GST ₹{b.tax}</div>
-                  </td>
-                  <td><StatusBadge s={b.status} /></td>
-                  <td>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {b.status === "pending" && (
-                        <>
-                          <button className="btn-success btn-sm" onClick={() => handleApprove(b)}>Approve</button>
-                          <button className="btn-danger btn-sm" onClick={() => handleCancel(b)}>Cancel</button>
-                        </>
-                      )}
-                      {b.status === "active" && (
-                        <button className="btn-primary btn-sm" onClick={() => handleComplete(b)}>Complete</button>
-                      )}
-                      {b.status === "completed" && (
-                        <button className="btn-success btn-sm" onClick={() => setBill(b)}>📄 Invoice</button>
-                      )}
-                      {b.status === "cancelled" && (
-                        <span style={{ fontSize: 12, color: "var(--text3)" }}>No actions</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {carImg && <img src={carImg} alt="" style={{ width: 44, height: 32, objectFit: "cover", borderRadius: 5 }} />}
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{carName}</div>
+                          <div style={{ fontSize: 11, color: "var(--text2)" }}>👤 {driverName}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: 12 }}>
+                        <div>📍 {(b.pickup_location || b.from || "—").split(",")[0]}</div>
+                        <div style={{ color: "var(--text2)" }}>🏁 {(b.dropoff_location || b.to || "—").split(",")[0]}</div>
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: 600, fontSize: 13 }}>
+                      {b.distance_km || b.km || 0} km
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--accent)" }}>
+                        ₹{Number(b.total_price || b.amount || 0).toLocaleString("en-IN")}
+                      </div>
+                    </td>
+                    <td><StatusBadge s={b.status} /></td>
+                    <td>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {b.status === "pending" && (
+                          <>
+                            <button className="btn-success btn-sm" onClick={() => handleApprove(b)}>✓ Accept</button>
+                            <button className="btn-danger btn-sm" onClick={() => handleCancel(b)}>✕ Reject</button>
+                          </>
+                        )}
+                        {b.status === "active" && (
+                          <button className="btn-primary btn-sm" onClick={() => handleComplete(b)}>Mark Done</button>
+                        )}
+                        {b.status === "completed" && (
+                          <button className="btn-success btn-sm" onClick={() => setBill(b)}>📄 Invoice</button>
+                        )}
+                        {b.status === "cancelled" && (
+                          <span style={{ fontSize: 12, color: "var(--text3)" }}>—</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {filtered.length === 0 && (
-                <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text2)" }}>No bookings found</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text2)" }}>
+                  {filter === "pending" ? "🎉 No pending requests" : "No bookings found"}
+                </td></tr>
               )}
             </tbody>
           </table>

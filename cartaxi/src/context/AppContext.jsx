@@ -5,8 +5,13 @@ const AppContext = createContext();
 const API_URL = "http://localhost:8000/api";
 
 export function AppProvider({ children }) {
-  const [screen, setScreen] = useState("admin-login"); 
-  const [role, setRole] = useState(null);
+  // Restore session from localStorage on page refresh
+  const [screen, setScreen] = useState(() => localStorage.getItem("ct_screen") || "admin-login");
+  const [role,   setRole]   = useState(() => localStorage.getItem("ct_role")   || null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("ct_user") || "null"); } catch { return null; }
+  });
+
   const [page, setPage] = useState("dashboard");
   const [bill, setBill] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -16,7 +21,7 @@ export function AppProvider({ children }) {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ── Must be defined FIRST so all other callbacks can safely call it ──
+  // Must be defined FIRST
   const showNotification = useCallback((msg, type = "success") => {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 3500);
@@ -35,32 +40,38 @@ export function AppProvider({ children }) {
       setDrivers(driversRes.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
-      // Server might be offline — silently fail so the UI still loads
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Fetch data whenever role is set
   useEffect(() => {
     if (role) fetchData();
   }, [role, fetchData]);
 
   const login = useCallback(async (r, credentials = {}) => {
+    let user = null;
     try {
-      await axios.post(`${API_URL}/users/login/`, { role: r, ...credentials });
+      const res = await axios.post(`${API_URL}/users/login/`, credentials);
+      user = res.data;
     } catch (e) {
-      // If server is down, still allow login in demo mode
-      if (!e.response) {
-        showNotification("Demo mode: server offline", "warning");
-      } else {
-        showNotification(e.response?.data?.error || "Login Failed", "error");
+      if (e.response?.data?.error) {
+        showNotification(e.response.data.error, "error");
         throw e;
       }
+      // Server offline → demo mode
+      user = { id: 0, username: credentials.username || r, role: r };
+      showNotification("Demo mode: server offline", "warning");
     }
+    setCurrentUser(user);
     setRole(r);
     setPage("dashboard");
     setScreen(r + "-app");
-    showNotification("Welcome to CarTaxi! 🚖");
+    localStorage.setItem("ct_screen", r + "-app");
+    localStorage.setItem("ct_role", r);
+    localStorage.setItem("ct_user", JSON.stringify(user));
+    showNotification(`Welcome, ${user.username}! 🚖`);
   }, [showNotification]);
 
   const register = useCallback(async (credentials = {}) => {
@@ -68,20 +79,23 @@ export function AppProvider({ children }) {
       await axios.post(`${API_URL}/users/register/`, credentials);
       showNotification("Account created! Please sign in.", "success");
     } catch(e) {
-      if (!e.response) {
-        showNotification("Demo mode: account saved locally", "warning");
-      } else {
-        showNotification(e.response?.data?.error || "Registration Failed", "error");
+      if (e.response?.data?.error) {
+        showNotification(e.response.data.error, "error");
         throw e;
       }
+      showNotification("Registration saved locally (demo mode)", "warning");
     }
   }, [showNotification]);
 
   const logout = useCallback(() => {
     setRole(null);
+    setCurrentUser(null);
     setPage("dashboard");
     setScreen("admin-login");
     setBill(null);
+    localStorage.removeItem("ct_screen");
+    localStorage.removeItem("ct_role");
+    localStorage.removeItem("ct_user");
   }, []);
 
   // ── Car Functions ──
@@ -111,12 +125,17 @@ export function AppProvider({ children }) {
   // ── Booking Functions ──
   const addBooking = useCallback(async (booking) => {
     try {
-      const res = await axios.post(`${API_URL}/bookings/`, booking);
+      // Always use the logged-in user's actual ID
+      const userId = currentUser?.id || 1;
+      const res = await axios.post(`${API_URL}/bookings/`, { ...booking, user: userId });
       setBookings(prev => [res.data, ...prev]);
       showNotification("Ride booked successfully!");
       return res.data;
-    } catch (e) { showNotification("Booking failed – server may be offline", "error"); }
-  }, [showNotification]);
+    } catch (e) {
+      showNotification("Booking failed – check server connection", "error");
+      return null;
+    }
+  }, [showNotification, currentUser]);
 
   const updateBookingStatus = useCallback(async (id, status) => {
     try {
@@ -142,7 +161,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      screen, setScreen, role, login, register, logout,
+      screen, setScreen, role, currentUser, login, register, logout,
       page, setPage,
       bill, setBill,
       sidebarOpen, setSidebarOpen,
