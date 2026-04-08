@@ -44,18 +44,26 @@ export function AppProvider({ children }) {
 
   const login = useCallback(async (r, credentials = {}) => {
     try {
-      // Very basic login for our generic API
       await axios.post(`${API_URL}/users/login/`, { role: r, ...credentials });
       setRole(r);
       setPage("dashboard");
       setScreen(r + "-app");
+      showNotification("Login successful");
     } catch (e) {
-      setRole(r);
-      setPage("dashboard");
-      setScreen(r + "-app");
-      showNotification("Proceeding in offline/demo mode", "warning");
+      showNotification(e.response?.data?.error || "Login Failed", "error");
+      throw e;
     }
-  }, []);
+  }, [API_URL, showNotification]);
+
+  const register = useCallback(async (credentials = {}) => {
+    try {
+        await axios.post(`${API_URL}/users/register/`, credentials);
+        showNotification("Account created successfully", "success");
+    } catch(e) {
+        showNotification(e.response?.data?.error || "Registration Failed", "error");
+        throw e;
+    }
+  }, [API_URL, showNotification]);
 
   const logout = useCallback(() => {
     setRole(null);
@@ -126,7 +134,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      screen, setScreen, role, login, logout,
+      screen, setScreen, role, login, register, logout,
       page, setPage,
       bill, setBill,
       sidebarOpen, setSidebarOpen,

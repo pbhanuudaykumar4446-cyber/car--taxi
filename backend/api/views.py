@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User, DriverProfile, Car, Booking
 from .serializers import UserSerializer, DriverProfileSerializer, CarSerializer, BookingSerializer
+from django.contrib.auth.hashers import make_password, check_password
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -10,12 +11,38 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def login(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        try:
+            user = User.objects.get(username=username)
+            if check_password(password, user.password):
+                return Response(UserSerializer(user).data)
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['post'])
+    def register(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email', '')
+        phone = request.data.get('phone', '')
         role = request.data.get('role', 'user')
-        username = f"{role}_demo" # Simple demo authentication
-        user, created = User.objects.get_or_create(username=username, defaults={'role': role})
-        if created and role == 'driver':
+        
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        user = User.objects.create(
+            username=username,
+            password=make_password(password),
+            email=email,
+            phone=phone,
+            role=role
+        )
+        if role == 'driver':
             DriverProfile.objects.create(user=user)
-        return Response(UserSerializer(user).data)
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 class DriverProfileViewSet(viewsets.ModelViewSet):
     queryset = DriverProfile.objects.all()
