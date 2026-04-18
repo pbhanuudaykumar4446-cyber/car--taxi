@@ -4,7 +4,7 @@ import { StatusBadge, Avatar, Stars, Toggle } from "../../components/ui";
  
 // ─── DRIVERS PAGE ──────────────────────────────────────────────────────────────
 export function DriversPage() {
-  const { drivers, addDriver, removeDriver, cars, showNotification } = useApp();
+  const { drivers, addDriver, removeDriver, cars, assignDriverToCar, showNotification } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", license: "", licenseExpiry: "", carId: "", address: "", age: "" });
  
@@ -25,6 +25,9 @@ export function DriversPage() {
 
     const result = await addDriver(payload);
     if (result) {
+      if (form.carId) {
+        await assignDriverToCar(form.carId, result.id);
+      }
       setShowModal(false);
       setForm({ name: "", phone: "", email: "", license: "", licenseExpiry: "", carId: "", address: "", age: "" });
     }

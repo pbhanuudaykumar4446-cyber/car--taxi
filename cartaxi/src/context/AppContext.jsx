@@ -133,6 +133,14 @@ export function AppProvider({ children }) {
     } catch (e) { showNotification("Failed to update car status", "error"); }
   }, [showNotification]);
 
+  const assignDriverToCar = useCallback(async (carId, driverId) => {
+    try {
+      const res = await axios.patch(`${API_URL}/cars/${carId}/`, { driver: driverId });
+      setCars(prev => prev.map(c => c.id === carId ? res.data : c));
+      showNotification("Driver assigned to car successfully!", "success");
+    } catch (e) { showNotification("Failed to assign car to driver", "error"); }
+  }, [showNotification]);
+
   // ── Booking Functions ──
   const addBooking = useCallback(async (booking) => {
     try {
@@ -185,7 +193,7 @@ export function AppProvider({ children }) {
       bill, setBill,
       sidebarOpen, setSidebarOpen,
       notification, showNotification,
-      cars, addCar, removeCar, updateCarStatus,
+      cars, addCar, removeCar, updateCarStatus, assignDriverToCar,
       bookings, addBooking, updateBookingStatus,
       drivers, addDriver, removeDriver,
       loading, fetchData

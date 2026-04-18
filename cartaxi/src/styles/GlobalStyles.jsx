@@ -83,6 +83,11 @@ export const GlobalStyle = () => (
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-glow);
     }
+    
+    option {
+      background: var(--surface2, var(--primary));
+      color: var(--text);
+    }
 
     button { font-family: var(--font-body); cursor: pointer; border: none; transition: all 0.2s; font-weight: 600; letter-spacing: 0.01em; }
 
@@ -120,6 +125,11 @@ export const GlobalStyle = () => (
     .tag-gold { background: rgba(245,158,11,0.15); color: var(--accent); border: 1px solid rgba(245,158,11,0.25); }
     .tag-teal { background: rgba(16,185,129,0.12); color: var(--accent2); border: 1px solid rgba(16,185,129,0.2); }
     .tag-blue { background: rgba(59,130,246,0.12); color: #60A5FA; border: 1px solid rgba(59,130,246,0.2); }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .modal { background: var(--primary-card); width: 100%; max-width: 500px; padding: 28px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 20px; }
 
     /* SIDEBAR */
     .sidebar {
